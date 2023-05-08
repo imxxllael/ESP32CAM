@@ -2,6 +2,8 @@ import numpy as np
 import cv2 as cv
 import Person
 import time
+import urllib.request
+
 
 try:
     log = open('log.txt',"w")
@@ -21,7 +23,7 @@ cnt_down = 0
 ##rawCapture = PiRGBArray(camera, size=(160,120))
 ##time.leep(0.1)
 url = "http://192.168.1.23"
-cap = cv.VideoCapture(url)
+#cap = cv.VideoCapture(url)
 
 #video properties
 ##cap.set(3,160) #Width
@@ -29,9 +31,8 @@ cap = cv.VideoCapture(url)
 
 #Print the capture properties to console
 for i in range(19):
-    print( i, cap.get(i))
 
-h = 600
+    h = 600
 w = 1500
 frameArea = h*w
 areaTH = frameArea/200
@@ -80,14 +81,18 @@ persons = []
 max_p_age = 5
 pid = 1
 
-while(cap.isOpened()):
-##for image in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-    #Lsee an image from the video source
-    ret, frame = cap.read()
-##    frame = image.array
+while True:
+    img_resp = urllib.request.urlopen(url)
+    img_np = np.array(bytearray(img_resp.read()), dtype=np.uint8)
+    frame = cv.imdecode(img_np, -1)
+    
+    if frame is not None:
+        for i in persons:
+            i.age_one() #age every person one frame
 
-    for i in persons:
-        i.age_one() #age every person one frame
+        fgmask = fgbg.apply(frame)
+        fgmask2 = fgbg.apply(frame)
+
     #########################
     #   PRE-PROCESSING      #
     #########################
@@ -212,5 +217,4 @@ while(cap.isOpened()):
 #################
 log.flush()
 log.close()
-cap.release()
 cv.destroyAllWindows()
